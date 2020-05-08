@@ -3,6 +3,51 @@
 
 #define SIGNATURE 0xE85600000100EC81
 
+#include <detours.h>
+#include <Windows.h>
+
+#define DRAWTEXTURE 0x466000//46FBD0
+int (__cdecl* originalDraw)(int,int,int,float);
+
+#define UIPOSEALIENHEALTH 0x466A90
+int (__cdecl* originalUiPoseAlienHealth)(int,float,float,int);
+
+#define UIPOSETEXTURE 0x453530
+int (__cdecl* originalUiPoseTexture)(float,float,float,float,float,float,float,float,float,int);
+
+#define UIPOSES 0x4533D0
+int (__cdecl* originalUiPoseText)(float a1, float a2, float a3, float a4, float a5, float a6, float a7, float a8, float a9);
+
+typedef int func(void);
+typedef int funcFloat(void);
+typedef int funcBool(void);
+func* getVidFiltering = (func*)0x452C20;
+func* getVidFullscreen = (func*)0x452C10;
+funcFloat* getVidTextureQuality = (funcFloat*)0x452C30;
+funcBool* isDepth32bit = (funcBool*)0x452C40;
+
+
+//This function is called when starting the game and loading a level to display bioware logo, interplay logo and loading texture
+int hookedDraw(int,int,int,float)
+{
+	return 0;
+}
+//This function is called when giving an alienhealth texture a position on the screen
+int hookedUiPoseAlienHealth(int,float,float,int)
+{
+	return 0;
+}
+//This function is called when applying a texture to a loading screen ,bioware logo or interplay logo
+int hookedUiPoseTexture(float,float,float,float,float,float,float,float,float,int)
+{
+	return 0;
+}
+
+int hookedUiPoseText(float a1, float a2, float a3, float a4, float a5, float a6, float a7, float a8, float a9)
+{
+	return 0;
+}
+
 void DllInitializer(HMODULE hDllModule)
 {
     // Проверка разположения нашей библиотеки 
@@ -47,7 +92,11 @@ BOOL APIENTRY DllMain( HMODULE hModule,
 	switch (ul_reason_for_call)
 	{
 	case DLL_PROCESS_ATTACH:
-		DllInitializer(hModule);
+		//DllInitializer(hModule);
+		//originalDraw = (int(__cdecl*)(int,int,int,float))DetourFunction((PBYTE)DRAWTEXTURE, (PBYTE)hookedDraw); //Magic
+		originalUiPoseAlienHealth = (int(__cdecl*)(int,float,float,int))DetourFunction((PBYTE)UIPOSEALIENHEALTH, (PBYTE)hookedUiPoseAlienHealth); //Magic
+		originalUiPoseText = (int(__cdecl*)(float a1, float a2, float a3, float a4, float a5, float a6, float a7, float a8, float a9))DetourFunction((PBYTE)UIPOSES, (PBYTE)hookedUiPoseText); //Magic
+	break;
 	case DLL_THREAD_ATTACH:
 	case DLL_THREAD_DETACH:
 	case DLL_PROCESS_DETACH:
